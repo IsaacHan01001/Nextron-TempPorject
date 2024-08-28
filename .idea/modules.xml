@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Tkinter.iml" filepath="$PROJECT_DIR$/.idea/Tkinter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/TKINTER_and_FB100_Sensor.iml" filepath="$PROJECT_DIR$/.idea/TKINTER_and_FB100_Sensor.iml" />
     </modules>
   </component>
 </project>
