@@ -1,11 +1,14 @@
 import sys
-from tkinter import *
-from tkinter import ttk
+from tkinter import  *
+import tkinter.ttk as ttk
 from PIL import Image, ImageTk
 import os
 from tkinter import messagebox
 
-class MainWindow(Frame):
+from Temp.FB100 import FB100
+from Temp.TempUtility.Utils import *
+
+class MainWindow(Frame, controller):
     def __init__(self, parent):
         self.Color_Black = "#1e1e1e" #black
         self.Color_White = "#f0f0f0" #white

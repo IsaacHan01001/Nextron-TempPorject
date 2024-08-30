@@ -100,7 +100,4 @@ def crc16_ccitt_false(data: bytes, poly=0xA001, init_crc=0xFFFF):
 
 # def crcCheck():
 if __name__ == "__main__":
-    number = b'\x01\x03\x00\x00\x00\x01'
-    result = crc16_ccitt_false(number)
-    quo, rem = result//256, result % 256
-    print("{0:#x} {1:#x}".format(quo, rem))
+    a = all_ports()

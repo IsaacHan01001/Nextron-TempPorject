@@ -2334,10 +2334,10 @@ def _getDiagnosticString():
 
 
 if __name__ == "__main__":
-    FB100 = Instrument("COM4", 2)
+    FB100 = Instrument("COM4", 1)
     FB100.debug = True
-    a = FB100.read_register(2, 2)
-    print(a)
+    print(FB100.read_register(0, 0))
+
 
     # fb2 = serial.Serial("COM4", baudrate=9600, timeout=0.2)
     # fb2.write('\x0401ID\x05\x04'.encode())
@@ -2346,4 +2346,5 @@ if __name__ == "__main__":
     #
     # fb2.write(f'\x0401M1\x05\x04'.encode())
     # print(fb2.read(100))
+    FB100.write_register(3, 10, )
 

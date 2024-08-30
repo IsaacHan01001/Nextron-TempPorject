@@ -110,3 +110,6 @@ for i, (text, command) in enumerate(Devices):
 # for i in range(len(Devices)):
 #     bottomFrame.grid_columnconfigure(i, weight=1)
 root.mainloop()
+
+
+
