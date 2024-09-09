@@ -47,7 +47,7 @@ class FB100(minimalmodbus.Instrument):
 
     def makeTempfields(self):
         rootFields = ["Temperature", "PID"]
-        temperatureFields = ["CurrentTemp", "SetTemp", "RampingTemp"]
+        temperatureFields = ["CurrentTemp", "SetTemp", "RampingTemp", "HotPower", "CoolPower"]
         PIDFields = ["P_hot", "I_hot", "D_hot", "P_Cool", "I_Cool", "D_Cool"]
         subFields = [temperatureFields, PIDFields]
 
@@ -140,6 +140,24 @@ class FB100(minimalmodbus.Instrument):
         '''
         return self.instrument.read_register(44)
 
+    def getHeatingManipulatedOutputValue(self):
+        '''
+        AKA heat power
+        RKC: O1
+        Modbus: 13
+        :return:
+        '''
+        return self.instrument.read_register(13)
+
+    def getCoolingManipulatedOutputValue(self):
+        '''
+        AKA cool power
+        RKC O2
+        Modbus: 14
+        :return:
+        '''
+        return self.instrument.read_register(14)
+
     # set process values#########################################
 
     def setHeatingPID(self, P = None, I = None, D = None): #d
@@ -210,7 +228,7 @@ class FB100(minimalmodbus.Instrument):
     def getInputScaleHigh(self):
         return self.instrument.read_register(86, self.getTempDecimalSetting())
 
-    def setRunOrStop(self, aInt):
+    def  OrStop(self, aInt):
         assert isinstance(aInt, int) and 0<=aInt<=1, f"{aInt} is not a valid integer"
         self.instrument.write_register(35, aInt)
 
@@ -253,12 +271,25 @@ class FB100(minimalmodbus.Instrument):
                 self.setRunOrStop(0) #keep running until cooled off
                 time.sleep(0.5)
         self.setRunOrStop(1) #turned off after about 10 seconds no matter what
+
+        #looping over 5 times to ensure the device is stopped. If the device is not stopped,
+        # the program will porint Unsuccessful message in the console
+        for i in range(5):
+            time.sleep(0.1)
+            if self.getRunOrStop() == 1:
+                return
+
+            self.setRunOrStop(1)
+
+        print("Unsuccessful in turning off the gadget.")
         return
 
     def updateFieldsInfo(self):
         self.temperature["Temperature"]["CurrentTemp"] = self.getTemperature()
         self.temperature["Temperature"]["SetTemp"] = self.getSetValue()
         self.temperature["Temperature"]["RampingTemp"] = self.getRampingRateLower() # assumes lower ramping == upper
+        # self.temperature["Temperature"]["HotPower"] = self.getHeatingManipulatedOutputValue()
+        # self.temperature["Temperature"]["HotPower"] = self.getCoolingManipulatedOutputValue()
 
         PID_hot = self.getHeatingPID()
         self.temperature["PID"]["P_hot"] = PID_hot[0]
@@ -272,9 +303,12 @@ class FB100(minimalmodbus.Instrument):
 
 if __name__ == "__main__":
     ports = all_ports()
+    print(ports)
     fb = FB100(ports[0], channel=1)
-    fb.updateFieldsInfo()
+    # print(fb.getTemperature())
+    print(fb.updateFieldsInfo())
     print(fb.temperature)
+    # print(fb.temperature)
 
 
     # fb.setTemperatureDecimal(2)
