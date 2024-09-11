@@ -10,6 +10,8 @@ from GUI_Utility.Utilities import * #Custom Utilities
 
 # from Temp.FB100 import FB100
 # from Temp.TempUtility.Utils import * # later, it would be moved to tempController series
+from device_connection import *
+from ButtonWindows import *
 
 class APP(Tk):
     def __init__(self, title, size):
@@ -28,8 +30,7 @@ class APP(Tk):
         self.option_add("*tearOff", FALSE)
         # self.protocol("WM_DELETE_WINDOW", self.quit) # turned off during development
         self.resizable(False, False) #if I fail managing geometry, I will block resizing
-
-        # widgets
+        # widgets configuration
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=0)
         self.rowconfigure(1, weight=5)
@@ -65,18 +66,36 @@ class Menu(ttk.Frame):
         self.columnconfigure((0, 1, 2, 3, 4, 5), uniform="b")
         self.rowconfigure(1, uniform="b")
 
+        #button topLevels
+        self.displayWindow = None
+        # self.display = None
+        # self.display = None
+        # self.display = None
+
+
     def makeImage(self):
         logo_path = os.path.join(os.path.dirname(__file__), "Images_logo/logo.png")
         image = ImageTk.PhotoImage(Image.open(logo_path).resize((180, 50), Image.Resampling.LANCZOS))
         return image
 
+    #Button Widget functioons
+    def homeCliked(self):
+        self.lift()
+        self.focus()
+
+    def create_display(self):
+        if self.displayWindow is None or not self.displayWindow.winfo_exists():
+            self.displayWindow = Display(self)
+        else:
+            self.displayWindow.lift()
+            self.displayWindow.focus()
     def makeButtons(self):
         s = ttk.Style()
         s.configure("Menu.TButton", font=("Helvetica", 12), foreground=Color["Black"])
         ans = []
         buttons = [
-            ("Home", lambda: print("Home clicked")),
-            ("Display", lambda: print("Display clicked")),
+            ("Home", self.homeCliked),
+            ("Display", self.create_display),
             ("Recipe", lambda: print("Recipe clicked")),
             ("Manual", lambda: print("Manual clicked")),
             ("I-V", lambda: print("I-V clicked")),
@@ -101,6 +120,9 @@ class Main(ttk.Frame):
         self.label = ttk.Label(self, background= Color["White"], anchor="nw", style="Menu.TLabel", text= "Select Controller or Instrument")
         self.label.grid(row=0, column=0, padx=5, pady=20)
 
+        #device widgets
+        self.temp_connection_window = None
+
         #DeviceFrame is a nested list where it contains :
         #   Device_Label : i.e. temperature
         #   Device_Image : i.e. mfc-image
@@ -109,6 +131,12 @@ class Main(ttk.Frame):
         self.makeDevices()
         self.columnconfigure((0, 1, 2, 3, 4, 5), uniform="a")
 
+    def create_temp(self):
+        if self.temp_connection_window is None or not self.temp_connection_window.winfo_exists():
+            self.temp_connection_window = TempConnection(self)
+        else:
+            self.temp_connection_window.lift()
+            self.temp_connection_window.focus()
     def makeDevices(self):
         s = ttk.Style()
         s.configure("Main.TButton", font=("TimesNewRoman", 12), foreground=Color["Black"])
@@ -117,7 +145,7 @@ class Main(ttk.Frame):
 
         #Label Name, Image, Click function
         Devices = [
-            ("Temperature", ImageTk.PhotoImage(Image.open(r"Images_svg/Temperature.png")), lambda: print("Temperature")),
+            ("Temperature", ImageTk.PhotoImage(Image.open(r"Images_svg/Temperature.png")), self.create_temp),
             ("Mass Flow", ImageTk.PhotoImage(Image.open(r"Images_svg/Mass Flow.png")), lambda: print("Mass Flow")),
             ("Humidity", ImageTk.PhotoImage(Image.open(r"Images_svg/Humidity.png")), lambda: print("Humidity")),
             ("Pressure", ImageTk.PhotoImage(Image.open(r"Images_svg/Pressure.png")), lambda: print("Pressure")),

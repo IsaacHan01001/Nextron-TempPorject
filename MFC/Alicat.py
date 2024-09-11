@@ -73,7 +73,7 @@ class Instrument:
 
 def all_ports(keyword = "CP210x"):
     # Get a list of available serial ports
-    ports = grep(keyword)  # Empty string to match all ports
+    ports = grep("")  # Empty string to match all ports
 
     # List to hold dictionaries of port details
     port_list = []
