@@ -1,11 +1,10 @@
-from TempUtility.Utils import *
-from TempController import GenericTempDevice
-
+from Devices.Temp.TempUtility.Utils import*
+import logging
 import serial
 import minimalmodbus
 import time
 
-class FB100(GenericTempDevice):
+class FB100:
     __author__ = "Isaac Han"
     __email__ = "cogitoergosum01001@gmail.com"
 
@@ -23,13 +22,36 @@ class FB100(GenericTempDevice):
         self.port = port
         self.channel = channel
         self.instrument = None
-        self.temperature = None
+        self.temperature = self.setTempfields()
+        self.logger = logging.getLogger("FB100")
+        self.connected = False
 
         if self.port:
-            self.makeInstrument()
-            self.makeTempfields()
+            self.setInstrument()
 
-    def makeInstrument(self):
+    def setTempfields(self):
+        rootFields = ["Temperature", "PID"]
+        temperatureFields = ["CurrentTemp", "SetTemp", "RampingTemp", "HotPower", "CoolPower"]
+        PIDFields = ["P_hot", "I_hot", "D_hot", "P_Cool", "I_Cool", "D_Cool"]
+        subFields = [temperatureFields, PIDFields]
+
+        ans = dict().fromkeys(rootFields, None)
+        for subInd, field in enumerate(rootFields):
+            ans[field] = dict().fromkeys(subFields[subInd], 0)
+        return ans
+
+    def _isFb100(self):
+        try:
+            test1 = self.getTemperatureUnit()
+            test2 = self.getRunOrStop()
+
+            if (test1 == 0 or test1 == 1) and (test2 == 0 or test2 == 1):
+                return True
+            return False
+        except:
+            return False
+
+    def setInstrument(self):
         '''
         creating minimalmodbus.instrument instance when received a valid port and channel
         :return:
@@ -39,12 +61,16 @@ class FB100(GenericTempDevice):
                 self.instrument = minimalmodbus.Instrument(self.port["Device"], self.channel)
                 self.instrument.serial.baudrate = 9600 #we set baudrate as we used 9600 It might cause error you change
             else:
-                print(f"Insufficient args: port: {self.port} channel: {self.channel}")
-            return
+                print(f"Necessary args are not provided: port: {self.port} channel: {self.channel}")
         except:
             import traceback
             traceback.print_exc()
             raise Exception(f"Connection failure from class FB100 with port {self.port} channel {self.channel}")
+        finally:
+            if self._isFb100():
+                self.connected = True
+            else:
+                self.instrument = None
 
     #getting initial configuration##############################################
     def getTempDecimalSetting(self):
@@ -219,7 +245,7 @@ class FB100(GenericTempDevice):
     def getInputScaleHigh(self):
         return self.instrument.read_register(86, self.getTempDecimalSetting())
 
-    def  OrStop(self, aInt):
+    def  setRunOrStop(self, aInt):
         assert isinstance(aInt, int) and 0<=aInt<=1, f"{aInt} is not a valid integer"
         self.instrument.write_register(35, aInt)
 
@@ -235,6 +261,15 @@ class FB100(GenericTempDevice):
         assert isinstance(aFloat, float), f"Invalid float with {aFloat} in setSettingLimiterLow"
         self.instrument.write_register(216, aFloat)
 
+    def disconnect(self):
+        if self.instrument:
+            try:
+                self.instrument.serial.close()
+                print("Serial port closed successfully.")
+            except Exception as e:
+                print(f"Error closing serial port: {e}")
+        else:
+            print("Serial port is not open.")
 
     #Composite Utility ##########
     def setSingleRampingRate(self, aFloat):
@@ -293,12 +328,18 @@ class FB100(GenericTempDevice):
         self.temperature["PID"]["D_cool"] = PID_cool[2]
 
 if __name__ == "__main__":
-    ports = all_ports()
-    print(ports)
+    ports, deviceInfo = all_ports()
     fb = FB100(ports[0], channel=1)
-    # print(fb.getTemperature())
-    print(fb.updateFieldsInfo())
+    print(fb.getTemperature())
+    fb.updateFieldsInfo()
     print(fb.temperature)
+    print(fb._isFb100())
+
+    # print(fb.getTemperature())
+
+    # print(fb.updateFieldsInfo())
+    # print(fb.temperature)
+
     # print(fb.temperature)
 
 

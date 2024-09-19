@@ -102,4 +102,6 @@ def crc16_ccitt_false(data: bytes, poly=0xA001, init_crc=0xFFFF):
 
 # def crcCheck():
 if __name__ == "__main__":
-    a = all_ports()
+    a, b = all_ports()
+    print(a)
+    print(b)

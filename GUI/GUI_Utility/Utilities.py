@@ -16,3 +16,8 @@ def makeIconPhoto():
 # Window Depth
 def printWindowDepth(root, window):
     print(root.tk.eval("WM_stackorder " + str(window)))
+
+def getRoot(widget):
+    while widget.master is not None:
+        widget = widget.master
+    return widget

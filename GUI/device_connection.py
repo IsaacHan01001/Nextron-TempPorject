@@ -1,6 +1,8 @@
 from tkinter import *
 import tkinter.ttk as ttk
+from Devices.Temp.TempUtility.Utils import *
 from GUI_Utility.Utilities import *
+from Devices.Temp.FB100 import FB100
 
 global Color
 Color = dict(White="#f0f0f0", Black="#1e1e1e", test="red")
@@ -18,8 +20,10 @@ Color = dict(White="#f0f0f0", Black="#1e1e1e", test="red")
 
 class TempConnection(Toplevel):
     def __init__(self, parent):
+        self.parent = parent
         #common across device widgets
         super().__init__(parent)
+        self.root = getRoot(self)
         self.geometry("800x600")
         self.iconphoto(False, makeIconPhoto())
         self.option_add("*tearOff", FALSE)
@@ -29,8 +33,8 @@ class TempConnection(Toplevel):
         self.columnconfigure(1, weight=3)
         self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-        ttk.Button(self, text="Connect", command= lambda x : print("Connecting...")).grid(row=0, column=5, sticky="we")
-        ttk.Button(self, text="DisConnect", command= lambda x : print("disConnecting...")).grid(row=0, column=6, sticky="we")
+        ttk.Button(self, text="Connect", command= self.connect_temp).grid(row=0, column=5, sticky="we")
+        ttk.Button(self, text="DisConnect", command= self.disconnect_temp).grid(row=0, column=6, sticky="we")
 
         s = ttk.Style()
         s.configure("Device.TLabel", font=("Helvetica", 12), foreground=Color["Black"])
@@ -88,7 +92,36 @@ class TempConnection(Toplevel):
     def on_close(self):
         self.destroy()
         self.master.temp_connection_window = None
+        self.disconnect_temp()
 
+    def connect_temp(self):
+        s = ttk.Style()
+        s.configure("on.TLabel", font=("Helvetica", 18), foreground=Color["White"],
+                    background="blue")
+        s.configure("off.TLabel", font=("Helvetica", 18), foreground=Color["White"],
+                    background=Color["Black"])
+
+        allPorts, _ = all_ports()
+        if len(self.root.devices["Temp"]) > 0:
+            print("a device is already connected")
+            return
+
+        for port in allPorts:
+            device = FB100(port, 1) #channel is assumed to be 1
+            if device.connected:
+                self.root.devices["Temp"].append(device)
+                self.parent.DeviceFrame[3][0].set("On")
+                self.parent.DeviceFrame[2][0].config(style="on.TLabel")
+
+                self.root.lift()
+                self.root.focus()
+                return
+
+    def disconnect_temp(self):
+        self.root.devices["Temp"][0].disconnect()
+        self.root.devices["Temp"] = []
+        self.parent.DeviceFrame[3][0].set("Off")
+        self.parent.DeviceFrame[2][0].config(style="off.TLabel")
 
 
 

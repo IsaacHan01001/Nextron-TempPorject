@@ -1,3 +1,2 @@
-stringa = "a"
-stringa += "b"
-print(stringa)
+test = {"Temp": [], "MFC": [], "Humidity": [], "Pressure": [], "Measurement": []}
+print(sorted(test))

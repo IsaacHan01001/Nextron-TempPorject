@@ -6,12 +6,12 @@ from tkinter import messagebox
 import tkinter.ttk as ttk
 from PIL import Image, ImageTk
 import os
-from GUI_Utility.Utilities import * #Custom Utilities
+from GUI_Utility.Utilities import*
 
 # from Temp.FB100 import FB100
 # from Temp.TempUtility.Utils import * # later, it would be moved to tempController series
 from device_connection import *
-from ButtonWindows import *
+from Display import *
 
 class APP(Tk):
     def __init__(self, title, size):
@@ -36,6 +36,10 @@ class APP(Tk):
         self.rowconfigure(1, weight=5)
         self.menu = Menu(self)
         self.main = Main(self)
+
+        #Devices
+        self.devices = {"Temp": [], "MFC": [], "Humidity": [], "Pressure": [], "Measurement": []}
+
 
         #run
         self.mainloop()
@@ -65,7 +69,6 @@ class Menu(ttk.Frame):
         self.buttons = self.makeButtons()
         self.columnconfigure((0, 1, 2, 3, 4, 5), uniform="b")
         self.rowconfigure(1, uniform="b")
-
         #button topLevels
         self.displayWindow = None
         # self.display = None
@@ -171,7 +174,8 @@ class Main(ttk.Frame):
             self.DeviceFrame[2][i].grid(row=3, column=i)
 
 if __name__ == "__main__":
-    APP("Nextron Program", (1500, 750))
+    app = APP("Nextron Program", (1500, 750))
+
 
 
 

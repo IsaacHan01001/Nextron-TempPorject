@@ -33,12 +33,13 @@ class GenericTempDevice(ABC):
         PIDFields = ["P_hot", "I_hot", "D_hot", "P_Cool", "I_Cool", "D_Cool"]
         subFields = [temperatureFields, PIDFields]
 
-        self.temperature = dict().fromkeys(rootFields, None)
+        ans = dict().fromkeys(rootFields, None)
         for subInd, field in enumerate(rootFields):
-            self.temperature[field] = dict().fromkeys(subFields[subInd], 0)
+            ans[field] = dict().fromkeys(subFields[subInd], 0)
+        return ans
 
     @abstractmethod
-    def setLogger(self):
+    def _setLogger(self):
         pass
 
     @abstractmethod
@@ -57,231 +58,29 @@ class GenericTempDevice(ABC):
         '''
         pass
 
+    @abstractmethod
     def setInstrument(self):
-        ports, deviceInfo = all_ports()
+        pass
 
+    @abstractmethod
+    def setRampingRateUpper(self, aFloat: float):
+        pass
 
+    @abstractmethod
+    def setRampingRateLower(self, aFloat: float):
+        pass
 
-
-
-
-
-    def makeInstrument(self):
-        '''
-        creating minimalmodbus.instrument instance when received a valid port and channel
-        :return:
-        '''
-        try:
-            if self.port and self.channel:
-                self.instrument = minimalmodbus.Instrument(self.port["Device"], self.channel)
-                self.instrument.serial.baudrate = 9600 #we set baudrate as we used 9600 It might cause error you change
-            else:
-                print(f"Insufficient args: port: {self.port} channel: {self.channel}")
-            return
-        except:
-            import traceback
-            traceback.print_exc()
-            raise Exception(f"Connection failure from class FB100 with port {self.port} channel {self.channel}")
-
-    def makeTempfields(self):
-        rootFields = ["Temperature", "PID"]
-        temperatureFields = ["CurrentTemp", "SetTemp", "RampingTemp", "HotPower", "CoolPower"]
-        PIDFields = ["P_hot", "I_hot", "D_hot", "P_Cool", "I_Cool", "D_Cool"]
-        subFields = [temperatureFields, PIDFields]
-
-        self.temperature = dict().fromkeys(rootFields, None)
-        for subInd, field in enumerate(rootFields):
-            self.temperature[field] = dict().fromkeys(subFields[subInd], 0)
-
-    #getting initial configuration##############################################
-    def getTempDecimalSetting(self):
-        '''
-        0: Interger
-        1: One decimal place
-        2: Two decimal place
-        '''
-        return self.instrument.read_register(84, 0)
-
-    def getTemperatureUnit(self):
-        '''
-        0 is for Celsius \u00B0CC
-        1 is for Farenheit \u00B0CF
-        '''
-        return self.instrument.read_register(83, 0)
-    # setting configuration#################################################
-
-    def setTempUnit(self, aInt):
-        assert isinstance(aInt, int), "Invalid data type for setTempUnit. It expects an integer"
-        if 0 <= aInt <= 2:
-            self.instrument.write_register(83, aInt) # for degree C
-        else:
-            raise Exception(f"Error with setting TempUnit Unknown command {aInt}")
-
-    def setTemperatureDecimal(self, aInt):
-        assert isinstance(aInt, int), "Invalid data type for setTemperatureUnit. It expects an integer"
-        if 0 <= aInt <= 2:
-            self.instrument.write_register(84, aInt)
-        else:
-            raise Exception(f"setTemperatureUnit Expects 0 or 1, not {aInt}")
-
-    # get Process values ##################################
+    @abstractmethod
     def getTemperature(self):
-        return self.instrument.read_register(0, self.getTempDecimalSetting())
+        pass
 
-    def getSetValueMonitor(self):
-        return self.instrument.read_register(3, self.getTempDecimalSetting())
+    @abstractmethod
+    def setRunOrStop(self, aInt: int):
+        pass
 
-    def getHeatSideMVI(self):
-        return self.instrument.read_register(13, 1)
-
-    def getCoolSideMV1(self):
-        return self.instrument.read_register(14, 1)
-
-    def getHeatingPID(self):
-        '''
-        Unit is important: Call self.getTempUnit
-        There is also 1/10th setting in derivative time unit
-        '''
-        P_heat = self.instrument.read_register(45, self.getTempDecimalSetting())
-        I_heat = self.instrument.read_register(46, self.getTempDecimalSetting())
-        D_heat = self.instrument.read_register(47, self.getTempDecimalSetting())
-        return (P_heat, I_heat, D_heat)
-
-    def getCoolingPID(self):
-        '''
-        Unit is important:
-        :return:
-        '''
-        P_cool = self.instrument.read_register(49, self.getTempDecimalSetting())
-        I_cool = self.instrument.read_register(50, self.getTempDecimalSetting())
-        D_cool = self.instrument.read_register(51, self.getTempDecimalSetting())
-        return (P_cool, I_cool, D_cool)
-
-    def getRampingRateLower(self):
-        '''
-        There are two ramping rate limiter one is down and the other is up
-        :return: (lower limit, upper limit)
-        '''
-        return self.instrument.read_register(55, self.getTempDecimalSetting())
-
-    def getRampingRateUpper(self):
-        '''
-        There are two ramping rate limiter one is down and the other is up
-        :return: (lower limit, upper limit)
-        '''
-        return self.instrument.read_register(54, self.getTempDecimalSetting())
-
-    def getSetValue(self):
-        '''
-        This gets the set temperature value
-        :return:
-        '''
-        return self.instrument.read_register(44)
-
-    def getHeatingManipulatedOutputValue(self):
-        '''
-        AKA heat power
-        RKC: O1
-        Modbus: 13
-        :return:
-        '''
-        return self.instrument.read_register(13)
-
-    def getCoolingManipulatedOutputValue(self):
-        '''
-        AKA cool power
-        RKC O2
-        Modbus: 14
-        :return:
-        '''
-        return self.instrument.read_register(14)
-
-    # set process values#########################################
-
-    def setHeatingPID(self, P = None, I = None, D = None): #d
-        if P is not None:
-            assert isinstance(P, int), f"Invalid P value with {P}"
-            self.write_register(45, P)
-        if I is not None:
-            assert isinstance(I, int), f"Invalid I value with {I}"
-            self.write_register(46, I)
-        if D is not None:
-            assert isinstance(D, int), f"Invalid D value with {D}"
-            self.write_register(47, D)
-
-    def setCoolingPID(self, P=None, I=None, D=None):
-        if P is not None:
-            assert isinstance(P, int), f"Invalid P value with {P}"
-            self.instrument.write_register(45, P)
-        if I is not None:
-            assert isinstance(I, int), f"Invalid P value with {I}"
-            self.instrument.write_register(46, I)
-        if D is not None:
-            assert isinstance(D, int), f"Invalid D value with {D}"
-            self.instrument.write_register(47, D)
-
-    def setRampingRateLower(self, aFloat):
-        assert isinstance(aFloat, float) or isinstance(aFloat, int), f"Problem with float: {aFloat} in setRampingRateLower"
-        '''
-        There are two ramping rate limiter one is down and the other is up
-        :return: (lower limit, upper limit)
-        '''
-        return self.instrument.write_register(55, aFloat, self.getTempDecimalSetting())
-
-    def setRampingRateUpper(self, aFloat):
-        assert isinstance(aFloat, float) or isinstance(aFloat, int), f"Problem with float: {aFloat} in setRampingRateHigher"
-        '''
-        There are two ramping rate limiter one is down and the other is up
-        :return: (lower limit, upper limit)
-        '''
-        return self.instrument.write_register(54, aFloat, self.getTempDecimalSetting())
-
-    def setSetValue(self, aFloat):
-        '''
-        This sets the set temperature
-        :param aFloat:
-        :return:
-        '''
-        assert isinstance(aFloat, float) or isinstance(aFloat, int), f"Problem with float: {aFloat} in setSV"
-        '''
-        Named as set temp. What is it????
-        :return: 
-        '''
-        self.instrument.write_register(44, aFloat)
-
-    # get operations#######################################################
-    def getRunOrStop(self):
-        return self.instrument.read_register(35, 0)
-
-    def getInputScaleLow(self):
-        return self.instrument.read_register(86, self.getTempDecimalSetting())
-
-    def getInputErrorDetermination(self):
-        return self.instrument.read_register(88, self.getTempDecimalSetting())
-
-    def getSettingLimiterLow(self):
-        return self.instrument.read_register(216, self.getTempDecimalSetting())
-
-    # set operations ######################################################
-    def getInputScaleHigh(self):
-        return self.instrument.read_register(86, self.getTempDecimalSetting())
-
-    def  OrStop(self, aInt):
-        assert isinstance(aInt, int) and 0<=aInt<=1, f"{aInt} is not a valid integer"
-        self.instrument.write_register(35, aInt)
-
-    def setInputScaleLow(self, aFloat):
-        assert isinstance(aFloat, float), f"Invalid float with {aFloat} in SetInputScaleLow"
-        self.instrument.write_register(86, aFloat)
-
-    def setInputErrorDeterminaiton(self, aFloat):
-        assert isinstance(aFloat, float), f"Invalid float with {aFloat} in SetInputErrorDetermination"
-        self.instrument.write_register(88, aFloat)
-
-    def setSettingLimiterLow(self, aFloat):
-        assert isinstance(aFloat, float), f"Invalid float with {aFloat} in setSettingLimiterLow"
-        self.instrument.write_register(216, aFloat)
-
+    @abstractmethod
+    def setTemperature(self, aFloat: float):
+        pass
 
     #Composite Utility ##########
     def setSingleRampingRate(self, aFloat):
@@ -319,7 +118,7 @@ class GenericTempDevice(ABC):
 
             self.setRunOrStop(1)
 
-        logging.error(f"{}")
+        logging.error(f"{1111}")
         return
 
     def updateFieldsInfo(self):
