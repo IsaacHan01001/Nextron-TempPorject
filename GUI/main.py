@@ -150,7 +150,7 @@ class Main(ttk.Frame):
             ("Humidity", ImageTk.PhotoImage(Image.open(r"Images_svg/Humidity.png")), lambda: print("Humidity")),
             ("Pressure", ImageTk.PhotoImage(Image.open(r"Images_svg/Pressure.png")), lambda: print("Pressure")),
             ("Measure", ImageTk.PhotoImage(Image.open(r"Images_svg/Measure.png")), lambda: print("Measure")),
-            ("Sample Feeder", ImageTk.PhotoImage(Image.open(r"Images_svg/SampleFeeder.png")), lambda: print("Sample Feeder")),
+            ("Sample Feeder", ImageTk.PhotoImage(Image.open(r"Images_svg/SampleFeeder.png")), lambda: print("Sample Fee der")),
         ]
         self.device_images = [img for _, img, _ in Devices] #Without it, images get garbage collected
 

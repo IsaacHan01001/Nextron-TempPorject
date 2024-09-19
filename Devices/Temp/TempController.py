@@ -1,32 +1,70 @@
 from TempUtility.Utils import *
+import time
 import serial
 import minimalmodbus
-import time
+import logging
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Optional, Union
+import asyncio
 
-class FB100(minimalmodbus.Instrument):
+class GenericTempDevice(ABC):
     __author__ = "Isaac Han"
     __email__ = "cogitoergosum01001@gmail.com"
+    __citation__ ="Numat's Alicat Driver created by Alex Ruddick and Jonas Berg's minimal modbus"
 
-    def __init__(self, port = None, channel = None):
+    def __init__(self, timeout: float): #One Example showing data type to the maintainer.
         '''
-        Communication for FB100. Communicate via RKC communication protocol
-        The program assumes: RS485. To make it more versatile, simply change regex in grep funciton at Utils.py
-        It also assumes: the baudrate = 9600
-                        : all PID values are integer types
-
-        :param port: listportinfo channel: slaveaddress
-        :param channel: channel number, default 0 is used for broadcasting command to all
+        Taken from Numant's ALicat Driver by Alex Ruddick and modified its usage
         '''
 
-        self.port = port
-        self.channel = channel
+        self.open = False
+        self.timeout = timeout
+        self.timeouts = 0
+        self.max_timeouts = 10
+        # self.lock = asyncio.Lock() #lock is not implemented. Need to study its documentation
+        self.logger = None
+
         self.instrument = None
-        self.temperature = None
-        self.mode = "default"
+        self.temperature = self.setTempfields()
 
-        if self.port:
-            self.makeInstrument()
-            self.makeTempfields()
+    def setTempfields(self):
+        rootFields = ["Temperature", "PID"]
+        temperatureFields = ["CurrentTemp", "SetTemp", "RampingTemp", "HotPower", "CoolPower"]
+        PIDFields = ["P_hot", "I_hot", "D_hot", "P_Cool", "I_Cool", "D_Cool"]
+        subFields = [temperatureFields, PIDFields]
+
+        self.temperature = dict().fromkeys(rootFields, None)
+        for subInd, field in enumerate(rootFields):
+            self.temperature[field] = dict().fromkeys(subFields[subInd], 0)
+
+    @abstractmethod
+    def setLogger(self):
+        pass
+
+    @abstractmethod
+    def _connect(self):
+        '''
+        Connect to Device through MinimalModbus
+        :return:
+        '''
+        pass
+
+    @abstractmethod
+    def _isInstrument(self):
+        '''
+        Check whether the connected device is a correct device
+        :return:
+        '''
+        pass
+
+    def setInstrument(self):
+        ports, deviceInfo = all_ports()
+
+
+
+
+
+
 
     def makeInstrument(self):
         '''
@@ -281,10 +319,14 @@ class FB100(minimalmodbus.Instrument):
 
             self.setRunOrStop(1)
 
-        print("Unsuccessful in turning off the gadget.")
+        logging.error(f"{}")
         return
 
     def updateFieldsInfo(self):
+        '''
+        Generic Method for updating Temperature fields
+        :return:
+        '''
         self.temperature["Temperature"]["CurrentTemp"] = self.getTemperature()
         self.temperature["Temperature"]["SetTemp"] = self.getSetValue()
         self.temperature["Temperature"]["RampingTemp"] = self.getRampingRateLower() # assumes lower ramping == upper
@@ -300,41 +342,3 @@ class FB100(minimalmodbus.Instrument):
         self.temperature["PID"]["P_cool"] = PID_cool[0]
         self.temperature["PID"]["I_cool"] = PID_cool[1]
         self.temperature["PID"]["D_cool"] = PID_cool[2]
-
-if __name__ == "__main__":
-    ports = all_ports()
-    print(ports)
-    fb = FB100(ports[0], channel=1)
-    # print(fb.getTemperature())
-    print(fb.updateFieldsInfo())
-    print(fb.temperature)
-    # print(fb.temperature)
-
-
-    # fb.setTemperatureDecimal(2)
-    # fb.setSetValue(10)
-    # print(fb.getCoolSideMV1())
-    # print(fb.getCoolingPID())
-    # fb.setRampingRateLower(10)
-    # fb.setRampingRateUpper(10)
-    # fb.setRunOrStop(1)
-    # print(fb.getRampingRateLower())
-    # print(fb.getSetValueMonitor())
-    # print(fb.getSetValue())
-    # fb.setRunOrStop(1)
-    # fb.setRampingRateLower(10)
-    # fb.setRampingRateUpper(10)
-
-    # print(fb.getSV())
-    # fb.setRunOrStop(1)
-    # print(fb.getInputScaleLow())
-    # print(fb.getHeatingPID())
-    # print(fb.getRunOrStop())
-    # fb.setRunOrStop(1)
-    # print(fb.getRunOrStop())
-    # print(fb.getTemperature())
-    # print(fb.getTempDecimalSetting())
-    # fb.setTemperatureDecimal(1)
-    # print(fb.getTempDecimalSetting())
-    # print(fb.getTemperature())
-    # print(fb.getHeatingPID())

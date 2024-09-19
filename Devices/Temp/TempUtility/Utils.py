@@ -28,19 +28,21 @@ def all_ports():
         port_list.append(port_info)
 
         # Optionally, print the details
-        print(f"Device: {port.device}")
-        print(f"Name: {port.name}")
-        print(f"Description: {port.description}")
-        print(f"HWID: {port.hwid}")
-        print(f"VID: {port.vid}")
-        print(f"PID: {port.pid}")
-        print(f"Serial Number: {port.serial_number}")
-        print(f"Location: {port.location}")
-        print(f"Manufacturer: {port.manufacturer}")
-        print(f"Product: {port.product}")
-        print(f"Interface: {port.interface}")
-        print("-" * 40)
-    return port_list
+        DeviceInfo = ""
+        DeviceInfo += f"Device: {port.device}\n"
+        DeviceInfo += f"Name: {port.name}\n"
+        DeviceInfo += f"Description: {port.description}\n"
+        DeviceInfo += f"HWID: {port.hwid}\n"
+        DeviceInfo += f"VID: {port.vid}\n"
+        DeviceInfo += f"PID: {port.pid}\n"
+        DeviceInfo += f"Serial Number: {port.serial_number}\n"
+        DeviceInfo += f"Location: {port.location}\n"
+        DeviceInfo += f"Manufacturer: {port.manufacturer}\n"
+        DeviceInfo += f"Product: {port.product}\n"
+        DeviceInfo += f"Interface: {port.interface}"
+        print(DeviceInfo) #comment out to suppress the output
+
+    return port_list, DeviceInfo
 
 def find(aPort):
     '''

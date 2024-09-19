@@ -6,7 +6,7 @@ import time
 class Instrument:
     def __init__(self, aPort, chr):
         # Initialize the serial connection
-        self.device = serial.Serial(aPort, timeout=0.2)
+        self.device = serial.Serial(aPort, timeout=0.5)
         self.chr = chr
         # Configure the serial connection parameters
         self.device.baudrate = 19200
@@ -73,7 +73,7 @@ class Instrument:
 
 def all_ports(keyword = "CP210x"):
     # Get a list of available serial ports
-    ports = grep("")  # Empty string to match all ports
+    ports = grep(keyword)  # Empty string to match all ports
 
     # List to hold dictionaries of port details
     port_list = []
