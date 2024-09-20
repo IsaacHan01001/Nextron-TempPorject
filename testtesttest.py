@@ -1,2 +1,4 @@
-test = {"Temp": [], "MFC": [], "Humidity": [], "Pressure": [], "Measurement": []}
-print(sorted(test))
+test = []
+if test:
+    print("1")
+print("a")

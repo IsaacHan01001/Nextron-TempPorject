@@ -81,6 +81,9 @@ class FB100:
         '''
         return self.instrument.read_register(84, 0)
 
+    def getSettingChangeRateLimiterUnitTime(self):
+        return self.instrument.read_register(214, 0)
+
     def getTemperatureUnit(self):
         '''
         0 is for Celsius \u00B0CC
@@ -155,7 +158,7 @@ class FB100:
         This gets the set temperature value
         :return:
         '''
-        return self.instrument.read_register(44)
+        return self.instrument.read_register(44, self.getTempDecimalSetting())
 
     def getHeatingManipulatedOutputValue(self):
         '''
@@ -174,6 +177,9 @@ class FB100:
         :return:
         '''
         return self.instrument.read_register(14)
+
+    def getAreaSoakTime(self):
+        return self.instrument.read_register(56)
 
     # set process values#########################################
 
@@ -226,7 +232,7 @@ class FB100:
         Named as set temp. What is it????
         :return: 
         '''
-        self.instrument.write_register(44, aFloat)
+        self.instrument.write_register(44, aFloat, self.getTempDecimalSetting())
 
     # get operations#######################################################
     def getRunOrStop(self):
@@ -330,10 +336,11 @@ class FB100:
 if __name__ == "__main__":
     ports, deviceInfo = all_ports()
     fb = FB100(ports[0], channel=1)
-    print(fb.getTemperature())
-    fb.updateFieldsInfo()
-    print(fb.temperature)
-    print(fb._isFb100())
+    # print(fb.getTemperature())
+    # fb.updateFieldsInfo()
+    # print(fb.temperature)
+    # print(fb._isFb100())
+    fb.setTemperatureDecimal(1)
 
     # print(fb.getTemperature())
 
