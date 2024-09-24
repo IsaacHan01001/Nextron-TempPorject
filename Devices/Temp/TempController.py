@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Union
 import asyncio
 
 class GenericTempDevice(ABC):
+    
     __author__ = "Isaac Han"
     __email__ = "cogitoergosum01001@gmail.com"
     __citation__ ="Numat's Alicat Driver created by Alex Ruddick and Jonas Berg's minimal modbus"

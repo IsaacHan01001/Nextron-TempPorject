@@ -173,8 +173,6 @@ class Main(ttk.Frame):
             self.DeviceFrame[1][i].grid(row=2, column=i)
             self.DeviceFrame[2][i].grid(row=3, column=i)
 
-
-
 if __name__ == "__main__":
     app = APP("Nextron Program", (1500, 750))
 

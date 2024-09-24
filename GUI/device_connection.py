@@ -118,7 +118,8 @@ class TempConnection(Toplevel):
                 return
 
     def disconnect_temp(self):
-        self.root.devices["Temp"][0].disconnect()
+        if self.root.devices["Temp"]:
+            self.root.devices["Temp"][0].disconnect()
         self.root.devices["Temp"] = []
         self.parent.DeviceFrame[3][0].set("Off")
         self.parent.DeviceFrame[2][0].config(style="off.TLabel")

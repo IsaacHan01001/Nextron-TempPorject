@@ -4,6 +4,8 @@ from GUI_Utility.Utilities import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
+import pandas as pd
+from datetime import datetime
 
 global Color
 Color = dict(White="#f0f0f0", Black="#1e1e1e", test="red")
@@ -11,6 +13,9 @@ Color = dict(White="#f0f0f0", Black="#1e1e1e", test="red")
 class Display(Toplevel):
     def __init__(self, parent):
         self.root = getRoot(parent)
+        self.data = pd.DataFrame(columns=["Timestamp", "CurrentTemp", "SetTemp", "RampingRate", "HotPower", "CoolPower"])
+        self.data.set_index('Timestamp', inplace=True)
+
         super().__init__(parent)
         self.geometry("800x700")
         self.iconphoto(False, makeIconPhoto())
@@ -89,13 +94,30 @@ class Display(Toplevel):
         elif len(aTempDevice) == 1:
             aTempDevice[0].updateFieldsInfo()
             theDevice = aTempDevice[0].temperature
+            timestamp = pd.to_datetime(datetime.now())
+            current_temp = theDevice["Temperature"]["CurrentTemp"]
+            set_temp = theDevice["Temperature"]["SetTemp"]
+            ramping_rate = theDevice["Temperature"]["RampingTemp"]
+            hot_power = theDevice["Temperature"]["HotPower"]
+            cool_power = theDevice["Temperature"]["CoolPower"]
+
+            self.data = pd.concat([self.data, pd.DataFrame([{
+                "Timestamp": timestamp,
+                "CurrentTemp": current_temp,
+                "SetTemp": set_temp,
+                "RampingRate": ramping_rate,
+                "HotPower": hot_power,
+                "CoolPower": cool_power
+            }])], ignore_index=True)
+
             self.timeUnit = aTempDevice[0].getSettingChangeRateLimiterUnitTime()
-            print(self.timeUnit)
-            self.tempFields["CurrTemp"].set(value=f"{theDevice["Temperature"]["CurrentTemp"]:.2f}" + self.tempUnit)
-            self.tempFields["SetTemp"].set(value=f"{theDevice["Temperature"]["SetTemp"]:.2f}" + self.tempUnit)
-            self.tempFields["RampingRate"].set(value=f"{theDevice["Temperature"]["RampingTemp"]:.2f}" + self.tempUnit + "/" + "s")
-            self.tempFields["HotPower"].set(value=f"{theDevice["Temperature"]["HotPower"]:.2f}" + self.tempUnit)
-            self.tempFields["CoolPower"].set(value=f"{theDevice["Temperature"]["CoolPower"]:.2f}" + self.tempUnit)
+            print("Ramping Rate Time Unit: ", self.timeUnit)
+
+            self.tempFields["CurrTemp"].set(value=f"{current_temp:.2f}" + self.tempUnit)
+            self.tempFields["SetTemp"].set(value=f"{set_temp:.2f}" + self.tempUnit)
+            self.tempFields["RampingRate"].set(value=f"{ramping_rate:.2f}" + self.tempUnit + "/" + "s")
+            self.tempFields["HotPower"].set(value=f"{hot_power:.2f}" + self.tempUnit)
+            self.tempFields["CoolPower"].set(value=f"{cool_power:.2f}" + self.tempUnit)
             self.plot()
         else:
             print("more than 2 devices connected")
@@ -104,9 +126,7 @@ class Display(Toplevel):
 
     def plot(self):
         self.ax.clear()
-        x = np.arange(20)
-        y = np.random.randint(0, 10, 20)
-        self.ax.plot(x,y)
+        self.data.plot(x="Timestamp", y="CurrentTemp", ax=self.ax)
         self.canvas.draw()
 
     def runHeater(self):
@@ -122,4 +142,6 @@ class Display(Toplevel):
             except ValueError:
                 print("Input floats for the value")
                 return
-            theDevice.setRunOrStop(0)
+
+            if theDevice.getRunOrStop() == 1:
+                theDevice.setRunOrStop(0)
