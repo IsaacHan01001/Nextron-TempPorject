@@ -67,7 +67,176 @@ class EPC3016:
     def getTemperature(self):
         return self.instrument.read_register(1, 1)
 
-    #getting initial configuration##############################################
+    def getLanguage(self):
+        return self.instrument.read_register(1024)
+
+    def getTempUnit(self):
+        return self.instrument.read_register(516)
+
+    def getInstumentNumber(self):
+        return self.instrument.read_register(1026)
+
+    def getVersion(self):
+        return self.instrument.read_register(18432)
+
+    ###############################################################################################
+    #Everything from below are taken from Jonas Berg                                          #####
+    #github Jonas Berg: https://github.com/SarathM1/modbus/blob/master/minimalmodbus.py#L2313 #####
+    ###############################################################################################
+
+    def get_pv_loop1(self):
+        """Return the process value (PV) for loop1."""
+        return self.instrument.read_register(289, 1)
+
+    def get_pv_loop2(self):
+        """Return the process value (PV) for loop2."""
+        return self.instrument.read_register(1313, 1)
+
+    def get_pv_module3(self):
+        """Return the process value (PV) for extension module 3 (A)."""
+        return self.instrument.read_register(370, 1)
+
+    def get_pv_module4(self):
+        """Return the process value (PV) for extension module 4 (A)."""
+        return self.instrument.read_register(373, 1)
+
+    def get_pv_module6(self):
+        """Return the process value (PV) for extension module 6 (A)."""
+        return self.instrument.read_register(379, 1)
+
+    ## Auto/manual mode
+
+    def is_manual_loop1(self):
+        """Return True if loop1 is in manual mode."""
+        return self.instrument.read_register(273, 1) > 0
+
+    ## Setpoint
+
+    def get_sptarget_loop1(self):
+        """Return the setpoint (SP) target for loop1."""
+        return self.instrument.read_register(2, 1)
+
+    def get_sp_loop1(self):
+        """Return the (working) setpoint (SP) for loop1."""
+        return self.instrument.read_register(5, 1)
+
+    def set_sp_loop1(self, value):
+        """Set the SP1 for loop1.
+
+        Note that this is not necessarily the working setpoint.
+
+        Args:
+            value (float): Setpoint (most often in degrees)
+        """
+        self.instrument.write_register(24, value, 1)
+
+    def get_sp_loop2(self):
+        """Return the (working) setpoint (SP) for loop2."""
+        return self.instrument.read_register(1029, 1)
+
+    ## Setpoint rate
+
+    def get_sprate_loop1(self):
+        """Return the setpoint (SP) change rate for loop1."""
+        return self.instrument.read_register(35, 1)
+
+    def set_sprate_loop1(self, value):
+        """Set the setpoint (SP) change rate for loop1.
+
+        Args:
+            value (float): Setpoint change rate (most often in degrees/minute)
+
+        """
+        self.instrument.write_register(35, value, 1)
+
+    def is_sprate_disabled_loop1(self):
+        """Return True if Loop1 setpoint (SP) rate is disabled."""
+        return self.instrument.read_register(78, 1) > 0
+
+    def disable_sprate_loop1(self):
+        """Disable the setpoint (SP) change rate for loop1. """
+        VALUE = 1
+        self.instrument.write_register(78, VALUE, 0)
+
+    def enable_sprate_loop1(self):
+        """Set disable=false for the setpoint (SP) change rate for loop1.
+
+        Note that also the SP rate value must be properly set for the SP rate to work.
+        """
+        VALUE = 0
+        self.instrument.write_register(78, VALUE, 0)
+
+        ## Output signal
+
+    def get_op_loop1(self):
+        """Return the output value (OP) for loop1 (in %)."""
+        return self.instrument.read_register(85, 1)
+
+    def is_inhibited_loop1(self):
+        """Return True if Loop1 is inhibited."""
+        return self.instrument.read_register(268, 1) > 0
+
+    def get_op_loop2(self):
+        """Return the output value (OP) for loop2 (in %)."""
+        return self.instrument.read_register(1109, 1)
+
+    ## Alarms
+
+    def get_threshold_alarm1(self):
+        """Return the threshold value for Alarm1."""
+        return self.instrument.read_register(10241, 1)
+
+    def is_set_alarmsummary(self):
+        """Return True if some alarm is triggered."""
+        return self.instrument.read_register(10213, 1) > 0
+
+
+########################
+## Testing the module ##
+########################
+
+if __name__ == '__main__':
+    print('TESTING EUROTHERM 3500 MODBUS MODULE')
+    ports, deviceInfo = all_ports()
+
+    a = EPC3016(ports[0], 1)
+    a.debug = False
+
+    print('SP1:                    {0}'.format(a.get_sp_loop1()))
+    print('SP1 target:             {0}'.format(a.get_sptarget_loop1()))
+    print('SP2:                    {0}'.format(a.get_sp_loop2()))
+    print('SP-rate Loop1 disabled: {0}'.format(a.is_sprate_disabled_loop1()))
+    print('SP1 rate:               {0}'.format(a.get_sprate_loop1()))
+    print('OP1:                    {0}%'.format(a.get_op_loop1()))
+    print('OP2:                    {0}%'.format(a.get_op_loop2()))
+    print('Alarm1 threshold:       {0}'.format(a.get_threshold_alarm1()))
+    print('Alarm summary:          {0}'.format(a.is_set_alarmsummary()))
+    print('Manual mode Loop1:      {0}'.format(a.is_manual_loop1()))
+    print('Inhibit Loop1:          {0}'.format(a.is_inhibited_loop1()))
+    print('PV1:                    {0}'.format(a.get_pv_loop1()))
+    print('PV2:                    {0}'.format(a.get_pv_loop2()))
+    print('PV module 3:            {0}'.format(a.get_pv_module3()))
+    print('PV module 4:            {0}'.format(a.get_pv_module4()))
+    print('PV module 6:            {0}'.format(a.get_pv_module6()))
+
+    # a.set_sprate_loop1(30)
+    # a.enable_sprate_loop1()
+
+    print('DONE!')
+
+pass
+
+
+# if __name__ == "__main__":
+#     ports, deviceInfo = all_ports()
+#     EPC = EPC3016(ports[0], channel=1)
+#     print(EPC.getTemperature())
+#     print(EPC.getLanguage())
+#     print(EPC.getTempUnit())
+#     print(EPC.getInstumentNumber())
+#     print(EPC.getVersion())
+
+#getting initial configuration##############################################
     # def getTempDecimalSetting(self):
     #     '''
     #     0: Interger
@@ -181,13 +350,13 @@ class EPC3016:
     # def setHeatingPID(self, P = None, I = None, D = None): #d
     #     if P is not None:
     #         assert isinstance(P, int), f"Invalid P value with {P}"
-    #         self.write_register(45, P)
+    #         self.instrument.write_register(45, P)
     #     if I is not None:
     #         assert isinstance(I, int), f"Invalid I value with {I}"
-    #         self.write_register(46, I)
+    #         self.instrument.write_register(46, I)
     #     if D is not None:
     #         assert isinstance(D, int), f"Invalid D value with {D}"
-    #         self.write_register(47, D)
+    #         self.instrument.write_register(47, D)
     #
     # def setCoolingPID(self, P=None, I=None, D=None):
     #     if P is not None:
@@ -328,10 +497,6 @@ class EPC3016:
     #     self.temperature["PID"]["I_cool"] = PID_cool[1]
     #     self.temperature["PID"]["D_cool"] = PID_cool[2]
 
-if __name__ == "__main__":
-    ports, deviceInfo = all_ports()
-    EPC = EPC3016(ports[0], channel=1)
-    print(EPC.getTemperature())
 
     # print(fb.getTemperature())
     # fb.updateFieldsInfo()
